@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "node",
+    "lib": ["es2021"],
+    "declaration": true,
+    "strict": true,
+    "newLine": "lf",
+    "target": "es2021",
+    "outDir": "./dist",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["./src"]
+}
