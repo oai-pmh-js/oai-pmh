@@ -1,6 +1,12 @@
 import { IOaiPmhParser } from '../interface/IOaiPmhParser';
 import { URL } from 'url';
 
+type VerbsAndFields = {
+  ListIdentifiers: 'header';
+  ListRecords: 'record';
+  ListSets: 'set';
+};
+
 type ListOptions = {
   from?: string;
   until?: string;
@@ -21,4 +27,9 @@ type OaiPmhOptionsConstructor = OaiPmhOptions &
   Partial<Omit<RequestOptions, 'baseUrl'>> &
   Required<Pick<RequestOptions, 'baseUrl'>>;
 
-export { ListOptions, OaiPmhOptionsConstructor, RequestOptions };
+export {
+  ListOptions,
+  OaiPmhOptionsConstructor,
+  RequestOptions,
+  VerbsAndFields,
+};

@@ -2,10 +2,11 @@ import {
   ListOptions,
   OaiPmhOptionsConstructor,
   RequestOptions,
+  VerbsAndFields,
 } from './type/general';
 import { IOaiPmhParser } from './interface/IOaiPmhParser';
 import got from 'got';
-import { OaiPmhError } from './oai-pmh-error';
+import { OaiPmhError } from './oai-pmh-error.js';
 
 export class OaiPmh {
   private readonly oaiPmhXML: IOaiPmhParser;
@@ -53,7 +54,11 @@ export class OaiPmh {
     return await this.oaiPmhXML.ParseIdentify(res.body);
   }
 
-  private async *List(verb: string, field: string, options?: ListOptions) {
+  private async *List<T extends keyof VerbsAndFields>(
+    verb: T,
+    field: VerbsAndFields[T],
+    options?: ListOptions,
+  ) {
     let JSO: { [p: string]: any };
     let resumptionToken: string | null;
     const { body } = await this.request({

@@ -1,3 +1,5 @@
+import { VerbsAndFields } from '../type/general';
+
 export interface IOaiPmhParser {
   GetResumptionToken(result: any): string | null;
 
@@ -9,5 +11,9 @@ export interface IOaiPmhParser {
 
   ParseRecord(obj: any): any;
 
-  ParseList(obj: any, verb: string, field: string): any;
+  ParseList<T extends keyof VerbsAndFields>(
+    obj: any,
+    verb: T,
+    field: VerbsAndFields[T],
+  ): any;
 }
