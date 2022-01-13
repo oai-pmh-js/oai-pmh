@@ -46,12 +46,16 @@ export class OaiPmh {
       identifier,
       metadataPrefix,
     });
-    return await this.oaiPmhXML.ParseRecord(res.body);
+    return await this.oaiPmhXML.ParseRecord(
+      this.oaiPmhXML.ParseOaiPmhXml(res.body),
+    );
   }
 
   public async identify() {
     const res = await this.request({ verb: 'Identify' });
-    return await this.oaiPmhXML.ParseIdentify(res.body);
+    return await this.oaiPmhXML.ParseIdentify(
+      this.oaiPmhXML.ParseOaiPmhXml(res.body),
+    );
   }
 
   private async *List<T extends keyof VerbsAndFields>(
