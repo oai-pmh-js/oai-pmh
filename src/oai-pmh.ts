@@ -85,7 +85,9 @@ export class OaiPmh {
     const searchParams = { verb: 'ListMetadataFormats' };
     if (identifier) Object.assign(searchParams, { identifier });
     const res = await this.request(searchParams);
-    return await this.oaiPmhXML.ParseMetadataFormats(res.body);
+    return await this.oaiPmhXML.ParseMetadataFormats(
+      this.oaiPmhXML.ParseOaiPmhXml(res.body),
+    );
   }
 
   public listIdentifiers(options: ListOptions) {
