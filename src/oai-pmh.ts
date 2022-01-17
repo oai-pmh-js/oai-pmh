@@ -33,9 +33,9 @@ export class OaiPmh {
       });
     } catch (error: any) {
       throw new OaiPmhError(
-        error.response.statusCode
+        error.response?.statusCode
           ? `Unexpected status code ${error.response.statusCode} (expected 200).`
-          : 'Unknown error',
+          : error,
       );
     }
   }
@@ -71,7 +71,7 @@ export class OaiPmh {
     });
     JSO = this.oaiPmhXML.ParseOaiPmhXml(body);
     yield this.oaiPmhXML.ParseList(JSO, verb, field);
-    while ((resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO))) {
+    while ((resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO[verb]))) {
       const { body } = await this.request({
         verb,
         resumptionToken,
