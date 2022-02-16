@@ -25,7 +25,7 @@ export class OaiPmh {
   private async request(searchParams?: Record<string, string>) {
     try {
       return await got.get(this.requestOptions.baseUrl, {
-        searchParams: searchParams,
+        searchParams,
         headers: { 'User-Agent': this.requestOptions.userAgent },
         retry: this.requestOptions.retry
           ? { maxRetryAfter: this.requestOptions.retryMax }
