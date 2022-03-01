@@ -3,7 +3,7 @@ import {
   OaiPmhOptionsConstructor,
   RequestOptions,
   VerbsAndFields,
-} from './type/general';
+} from './types/general';
 import { IOaiPmhParser } from './interface/IOaiPmhParser';
 import got from 'got';
 import { OaiPmhError } from './oai-pmh-error.js';
@@ -30,6 +30,14 @@ export class OaiPmh {
         retry: this.requestOptions.retry
           ? { maxRetryAfter: this.requestOptions.retryMax }
           : undefined,
+        timeout: {
+          lookup: 600,
+          connect: 300,
+          secureConnect: 300,
+          socket: 6000,
+          send: 60000,
+          response: 6000,
+        },
       });
     } catch (error: any) {
       throw new OaiPmhError(

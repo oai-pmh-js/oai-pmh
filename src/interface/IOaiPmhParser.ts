@@ -1,4 +1,4 @@
-import { VerbsAndFields } from '../type/general';
+import { VerbsAndFields } from '../types/general';
 
 export interface IOaiPmhParser {
   GetResumptionToken(result: any): string | null;
