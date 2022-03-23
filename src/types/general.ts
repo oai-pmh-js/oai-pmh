@@ -20,14 +20,14 @@ type RequestOptions = {
   retryMax: number;
   userAgent: string;
   retry: boolean;
-  timeout: Delays;
+  timeout?: Delays;
 };
 type OaiPmhOptions = {
   xmlParser: OaiPmhParserInterface;
 };
 type OaiPmhOptionsConstructor = OaiPmhOptions &
-  Partial<Omit<RequestOptions, 'baseUrl'>> &
-  Required<Pick<RequestOptions, 'baseUrl'>>;
+  Partial<Omit<RequestOptions, 'baseUrl' | 'timeout'>> &
+  Pick<RequestOptions, 'baseUrl'> & { timeout?: Delays | null };
 
 export {
   ListOptions,

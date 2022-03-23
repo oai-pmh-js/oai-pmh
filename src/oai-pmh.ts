@@ -16,17 +16,22 @@ export class OaiPmh {
     this.oaiPmhXML = options.xmlParser;
     this.requestOptions = {
       baseUrl: options.baseUrl,
-      retry: (options && options.retry) ?? true,
-      retryMax: (options && options.retryMax) ?? 600000,
-      userAgent: (options && options.userAgent) || 'Node.js OAI-PMH',
-      timeout: (options && options.timeout) || {
-        lookup: 3000,
-        connect: 1500,
-        secureConnect: 1500,
-        socket: 30000,
-        send: 300000,
-        response: 30000,
-      },
+      retry: options.retry ?? true,
+      retryMax: options.retryMax ?? 600000,
+      userAgent: options.userAgent || 'Node.js OAI-PMH',
+      timeout:
+        options.timeout === undefined
+          ? {
+              lookup: 3000,
+              connect: 1500,
+              secureConnect: 1500,
+              socket: 30000,
+              send: 300000,
+              response: 30000,
+            }
+          : options.timeout === null
+          ? undefined
+          : options.timeout,
     };
   }
 
