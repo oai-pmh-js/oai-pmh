@@ -27,7 +27,7 @@ type OaiPmhOptions = {
 };
 type OaiPmhOptionsConstructor = OaiPmhOptions &
   Partial<Omit<RequestOptions, 'baseUrl'>> &
-  Required<Pick<RequestOptions, 'baseUrl' | 'timeout'>>;
+  Required<Pick<RequestOptions, 'baseUrl'>>;
 
 export {
   ListOptions,
