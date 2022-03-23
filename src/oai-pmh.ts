@@ -31,12 +31,12 @@ export class OaiPmh {
           ? { maxRetryAfter: this.requestOptions.retryMax }
           : undefined,
         timeout: {
-          lookup: 600,
-          connect: 300,
-          secureConnect: 300,
-          socket: 6000,
-          send: 60000,
-          response: 6000,
+          lookup: 3000,
+          connect: 1500,
+          secureConnect: 1500,
+          socket: 30000,
+          send: 300000,
+          response: 30000,
         },
       });
     } catch (error: any) {
