@@ -1,6 +1,6 @@
 import { VerbsAndFields } from '../types/general';
 
-export interface IOaiPmhParser {
+export interface OaiPmhParserInterface {
   GetResumptionToken(result: any): string | null;
 
   ParseOaiPmhXml(xml: string): any;

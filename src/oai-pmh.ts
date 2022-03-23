@@ -4,12 +4,12 @@ import {
   RequestOptions,
   VerbsAndFields,
 } from './types/general';
-import { IOaiPmhParser } from './interface/IOaiPmhParser';
+import { OaiPmhParserInterface } from './interface/oai-pmh-parser.interface';
 import got from 'got';
 import { OaiPmhError } from './oai-pmh-error.js';
 
 export class OaiPmh {
-  private readonly oaiPmhXML: IOaiPmhParser;
+  private readonly oaiPmhXML: OaiPmhParserInterface;
   private readonly requestOptions: RequestOptions;
 
   constructor(options: OaiPmhOptionsConstructor) {
@@ -19,6 +19,14 @@ export class OaiPmh {
       retry: (options && options.retry) ?? true,
       retryMax: (options && options.retryMax) ?? 600000,
       userAgent: (options && options.userAgent) || 'Node.js OAI-PMH',
+      timeout: (options && options.timeout) || {
+        lookup: 3000,
+        connect: 1500,
+        secureConnect: 1500,
+        socket: 30000,
+        send: 300000,
+        response: 30000,
+      },
     };
   }
 
@@ -30,14 +38,7 @@ export class OaiPmh {
         retry: this.requestOptions.retry
           ? { maxRetryAfter: this.requestOptions.retryMax }
           : undefined,
-        timeout: {
-          lookup: 3000,
-          connect: 1500,
-          secureConnect: 1500,
-          socket: 30000,
-          send: 300000,
-          response: 30000,
-        },
+        timeout: this.requestOptions.timeout,
       });
     } catch (error: any) {
       throw new OaiPmhError(

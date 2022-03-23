@@ -1,5 +1,6 @@
-import { IOaiPmhParser } from '../interface/IOaiPmhParser';
+import { OaiPmhParserInterface } from '../interface/oai-pmh-parser.interface';
 import { URL } from 'url';
+import { Delays } from 'got';
 
 type VerbsAndFields = {
   ListIdentifiers: 'header';
@@ -19,13 +20,14 @@ type RequestOptions = {
   retryMax: number;
   userAgent: string;
   retry: boolean;
+  timeout: Delays;
 };
 type OaiPmhOptions = {
-  xmlParser: IOaiPmhParser;
+  xmlParser: OaiPmhParserInterface;
 };
 type OaiPmhOptionsConstructor = OaiPmhOptions &
   Partial<Omit<RequestOptions, 'baseUrl'>> &
-  Required<Pick<RequestOptions, 'baseUrl'>>;
+  Required<Pick<RequestOptions, 'baseUrl' | 'timeout'>>;
 
 export {
   ListOptions,
