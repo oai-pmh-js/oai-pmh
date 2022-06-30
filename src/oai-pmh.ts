@@ -90,13 +90,7 @@ export class OaiPmh {
     options?: ListOptions,
     requestOptions?: RequestOptions,
   ) {
-    let running = true;
-    if (requestOptions?.abortController) {
-      requestOptions.abortController.signal.addEventListener('abort', () => {
-        running = false;
-      });
-    }
-    let JSO: { [p: string]: any };
+    let JSO: { [k: string]: any };
     let resumptionToken: string | null;
     const xml = await this.request(
       new URLSearchParams({
@@ -107,10 +101,7 @@ export class OaiPmh {
     );
     JSO = this.oaiPmhXML.ParseOaiPmhXml(xml);
     yield this.oaiPmhXML.ParseList(JSO, verb, field);
-    while (
-      running &&
-      (resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO[verb]))
-    ) {
+    while ((resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO[verb]))) {
       const xml = await this.request(
         new URLSearchParams({
           verb,
