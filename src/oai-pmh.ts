@@ -2,117 +2,136 @@ import {
   ListOptions,
   OaiPmhOptionsConstructor,
   RequestOptions,
-  VerbsAndFields,
-} from './types/general';
-import { OaiPmhParserInterface } from './interface/oai-pmh-parser.interface';
-import got from 'got';
+  BaseOptions,
+  VerbsAndFieldsForList,
+} from './model/general';
+import { OaiPmhParserInterface } from './model/oai-pmh-parser.interface';
+import { default as fetch, AbortError } from 'node-fetch';
 import { OaiPmhError } from './oai-pmh-error.js';
 
 export class OaiPmh {
   private readonly oaiPmhXML: OaiPmhParserInterface;
-  private readonly requestOptions: RequestOptions;
+  private readonly requestOptions: BaseOptions;
+  private readonly identifyVerbURLParams = new URLSearchParams({
+    verb: 'Identify',
+  });
 
   constructor(options: OaiPmhOptionsConstructor) {
     this.oaiPmhXML = options.xmlParser;
+    new URL(options.baseUrl);
     this.requestOptions = {
       baseUrl: options.baseUrl,
-      retry: options.retry ?? true,
-      retryMax: options.retryMax ?? 600000,
-      userAgent: options.userAgent || 'Node.js OAI-PMH',
-      timeout:
-        options.timeout === undefined
-          ? {
-              lookup: 3000,
-              connect: 1500,
-              secureConnect: 1500,
-              socket: 30000,
-              send: 300000,
-              response: 30000,
-            }
-          : options.timeout === null
-          ? undefined
-          : options.timeout,
+      userAgent: { 'User-Agent': options.userAgent || 'Node.js OAI-PMH' },
     };
   }
 
-  private async request(searchParams?: Record<string, string>) {
+  private async request(
+    searchParams?: URLSearchParams,
+    options?: RequestOptions,
+  ): Promise<string> {
+    const abortController = options?.abortController || new AbortController();
+    const searchURL = new URL(this.requestOptions.baseUrl);
+    if (searchParams) searchURL.search = searchParams.toString();
+    const promise = fetch(searchURL.toString(), {
+      method: 'GET',
+      signal: abortController.signal,
+      headers: this.requestOptions.userAgent,
+    });
+    const timeout = options?.timeout;
+    const timer = timeout
+      ? setTimeout(() => abortController.abort(), timeout)
+      : undefined;
     try {
-      return await got.get(this.requestOptions.baseUrl, {
-        searchParams,
-        headers: { 'User-Agent': this.requestOptions.userAgent },
-        retry: this.requestOptions.retry
-          ? { maxRetryAfter: this.requestOptions.retryMax }
-          : undefined,
-        timeout: this.requestOptions.timeout,
-      });
-    } catch (error: any) {
-      throw new OaiPmhError(
-        error.response?.statusCode
-          ? `Unexpected status code ${error.response.statusCode} (expected 200).`
-          : error,
-      );
+      return (await promise).text();
+    } catch (e: any) {
+      if (e instanceof AbortError) throw e;
+      if (options?.retry && options.retry > 0) {
+        options.retry -= 1;
+        return await this.request(searchParams, options);
+      }
+      throw new OaiPmhError(e.message);
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   }
 
-  public async getRecord(identifier: string, metadataPrefix: string) {
-    const res = await this.request({
-      verb: 'GetRecord',
-      identifier,
-      metadataPrefix,
-    });
-    return await this.oaiPmhXML.ParseRecord(
-      this.oaiPmhXML.ParseOaiPmhXml(res.body),
+  async getRecord(identifier: string, metadataPrefix: string) {
+    const xml = await this.request(
+      new URLSearchParams({
+        verb: 'GetRecord',
+        identifier,
+        metadataPrefix,
+      }),
     );
+    return await this.oaiPmhXML.ParseRecord(this.oaiPmhXML.ParseOaiPmhXml(xml));
   }
 
-  public async identify() {
-    const res = await this.request({ verb: 'Identify' });
+  async identify() {
+    const xml = await this.request(this.identifyVerbURLParams);
     return await this.oaiPmhXML.ParseIdentify(
-      this.oaiPmhXML.ParseOaiPmhXml(res.body),
+      this.oaiPmhXML.ParseOaiPmhXml(xml),
     );
   }
 
-  private async *List<T extends keyof VerbsAndFields>(
+  async listMetadataFormats(identifier?: string) {
+    const searchParams = new URLSearchParams({
+      verb: 'ListMetadataFormats',
+    });
+    if (identifier) searchParams.set('identifier', identifier);
+    const xml = await this.request(searchParams);
+    return await this.oaiPmhXML.ParseMetadataFormats(
+      this.oaiPmhXML.ParseOaiPmhXml(xml),
+    );
+  }
+
+  private async *List<T extends keyof VerbsAndFieldsForList>(
     verb: T,
-    field: VerbsAndFields[T],
+    field: VerbsAndFieldsForList[T],
     options?: ListOptions,
+    requestOptions?: RequestOptions,
   ) {
+    let running = true;
+    if (requestOptions?.abortController) {
+      requestOptions.abortController.signal.addEventListener('abort', () => {
+        running = false;
+      });
+    }
     let JSO: { [p: string]: any };
     let resumptionToken: string | null;
-    const { body } = await this.request({
-      ...options,
-      verb,
-    });
-    JSO = this.oaiPmhXML.ParseOaiPmhXml(body);
-    yield this.oaiPmhXML.ParseList(JSO, verb, field);
-    while ((resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO[verb]))) {
-      const { body } = await this.request({
+    const xml = await this.request(
+      new URLSearchParams({
+        ...options,
         verb,
-        resumptionToken,
-      });
-      JSO = this.oaiPmhXML.ParseOaiPmhXml(body);
+      }),
+      requestOptions,
+    );
+    JSO = this.oaiPmhXML.ParseOaiPmhXml(xml);
+    yield this.oaiPmhXML.ParseList(JSO, verb, field);
+    while (
+      running &&
+      (resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO[verb]))
+    ) {
+      const xml = await this.request(
+        new URLSearchParams({
+          verb,
+          resumptionToken,
+        }),
+        requestOptions,
+      );
+      JSO = this.oaiPmhXML.ParseOaiPmhXml(xml);
       yield this.oaiPmhXML.ParseList(JSO, verb, field);
     }
   }
 
-  public async listMetadataFormats(identifier?: string) {
-    const searchParams = { verb: 'ListMetadataFormats' };
-    if (identifier) Object.assign(searchParams, { identifier });
-    const res = await this.request(searchParams);
-    return await this.oaiPmhXML.ParseMetadataFormats(
-      this.oaiPmhXML.ParseOaiPmhXml(res.body),
-    );
+  listIdentifiers(options: ListOptions, requestOptions?: RequestOptions) {
+    return this.List('ListIdentifiers', 'header', options, requestOptions);
   }
 
-  public listIdentifiers(options: ListOptions) {
-    return this.List('ListIdentifiers', 'header', options);
+  listRecords(options: ListOptions, requestOptions?: RequestOptions) {
+    return this.List('ListRecords', 'record', options, requestOptions);
   }
 
-  public listRecords(options: ListOptions) {
-    return this.List('ListRecords', 'record', options);
-  }
-
-  public listSets() {
-    return this.List('ListSets', 'set');
+  listSets(requestOptions?: RequestOptions) {
+    return this.List('ListSets', 'set', undefined, requestOptions);
   }
 }

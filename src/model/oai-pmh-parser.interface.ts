@@ -1,4 +1,4 @@
-import { VerbsAndFields } from '../types/general';
+import { VerbsAndFieldsForList } from './general';
 
 export interface OaiPmhParserInterface {
   GetResumptionToken(result: any): string | null;
@@ -11,9 +11,9 @@ export interface OaiPmhParserInterface {
 
   ParseRecord(obj: any): any;
 
-  ParseList<T extends keyof VerbsAndFields>(
+  ParseList<T extends keyof VerbsAndFieldsForList>(
     obj: any,
     verb: T,
-    field: VerbsAndFields[T],
+    field: VerbsAndFieldsForList[T],
   ): any;
 }
