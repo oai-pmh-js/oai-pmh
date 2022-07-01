@@ -25,6 +25,14 @@ export class OaiPmh {
     };
   }
 
+  private static cleanOptionsOfUndefined(options: ListOptions) {
+    for (const key of Object.keys(options)) {
+      const forcedKey = <keyof ListOptions>key;
+      if (options[forcedKey] === undefined) delete options[forcedKey];
+    }
+    return options;
+  }
+
   private async request(
     searchParams?: URLSearchParams,
     options?: RequestOptions,
@@ -55,32 +63,40 @@ export class OaiPmh {
     }
   }
 
-  async getRecord(identifier: string, metadataPrefix: string) {
+  async getRecord(
+    identifier: string,
+    metadataPrefix: string,
+    requestOptions?: RequestOptions,
+  ) {
     const xml = await this.request(
       new URLSearchParams({
         verb: 'GetRecord',
         identifier,
         metadataPrefix,
       }),
+      requestOptions,
     );
-    return await this.oaiPmhXML.ParseRecord(this.oaiPmhXML.ParseOaiPmhXml(xml));
+    return await this.oaiPmhXML.parseRecord(this.oaiPmhXML.parseOaiPmhXml(xml));
   }
 
-  async identify() {
-    const xml = await this.request(this.identifyVerbURLParams);
-    return await this.oaiPmhXML.ParseIdentify(
-      this.oaiPmhXML.ParseOaiPmhXml(xml),
+  async identify(requestOptions?: RequestOptions) {
+    const xml = await this.request(this.identifyVerbURLParams, requestOptions);
+    return await this.oaiPmhXML.parseIdentify(
+      this.oaiPmhXML.parseOaiPmhXml(xml),
     );
   }
 
-  async listMetadataFormats(identifier?: string) {
+  async listMetadataFormats(
+    identifier?: string,
+    requestOptions?: RequestOptions,
+  ) {
     const searchParams = new URLSearchParams({
       verb: 'ListMetadataFormats',
     });
     if (identifier) searchParams.set('identifier', identifier);
-    const xml = await this.request(searchParams);
-    return await this.oaiPmhXML.ParseMetadataFormats(
-      this.oaiPmhXML.ParseOaiPmhXml(xml),
+    const xml = await this.request(searchParams, requestOptions);
+    return await this.oaiPmhXML.parseMetadataFormats(
+      this.oaiPmhXML.parseOaiPmhXml(xml),
     );
   }
 
@@ -90,8 +106,6 @@ export class OaiPmh {
     options?: ListOptions,
     requestOptions?: RequestOptions,
   ) {
-    let JSO: { [k: string]: any };
-    let resumptionToken: string | null;
     const xml = await this.request(
       new URLSearchParams({
         ...options,
@@ -99,27 +113,37 @@ export class OaiPmh {
       }),
       requestOptions,
     );
-    JSO = this.oaiPmhXML.ParseOaiPmhXml(xml);
-    yield this.oaiPmhXML.ParseList(JSO, verb, field);
-    while ((resumptionToken = this.oaiPmhXML.GetResumptionToken(JSO[verb]))) {
+    let parsedXml = this.oaiPmhXML.parseOaiPmhXml(xml);
+    yield this.oaiPmhXML.parseList(parsedXml, verb, field);
+    let resumptionToken: string | null;
+    while (
+      (resumptionToken = this.oaiPmhXML.parseResumptionToken(parsedXml, verb))
+    ) {
       const xml = await this.request(
-        new URLSearchParams({
-          verb,
-          resumptionToken,
-        }),
+        new URLSearchParams({ verb, resumptionToken }),
         requestOptions,
       );
-      JSO = this.oaiPmhXML.ParseOaiPmhXml(xml);
-      yield this.oaiPmhXML.ParseList(JSO, verb, field);
+      parsedXml = this.oaiPmhXML.parseOaiPmhXml(xml);
+      yield this.oaiPmhXML.parseList(parsedXml, verb, field);
     }
   }
 
   listIdentifiers(options: ListOptions, requestOptions?: RequestOptions) {
-    return this.List('ListIdentifiers', 'header', options, requestOptions);
+    return this.List(
+      'ListIdentifiers',
+      'header',
+      OaiPmh.cleanOptionsOfUndefined(options),
+      requestOptions,
+    );
   }
 
   listRecords(options: ListOptions, requestOptions?: RequestOptions) {
-    return this.List('ListRecords', 'record', options, requestOptions);
+    return this.List(
+      'ListRecords',
+      'record',
+      OaiPmh.cleanOptionsOfUndefined(options),
+      requestOptions,
+    );
   }
 
   listSets(requestOptions?: RequestOptions) {

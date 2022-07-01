@@ -1,18 +1,23 @@
 import { VerbsAndFieldsForList } from './general';
 
 export interface OaiPmhParserInterface {
-  GetResumptionToken(result: any): string | null;
+  parseResumptionToken(
+    value: any,
+    verb: keyof VerbsAndFieldsForList,
+  ): string | null;
 
-  ParseOaiPmhXml(xml: string): any;
+  parseOaiPmhXml(xml: string): any;
 
-  ParseIdentify(obj: any): any;
+  parseIdentify(value: any): any;
 
-  ParseMetadataFormats(obj: any): any;
+  parseMetadataFormats(value: any): any;
 
-  ParseRecord(obj: any): any;
+  parseRecord(value: any): any;
 
-  ParseList<T extends keyof VerbsAndFieldsForList>(
-    obj: any,
+  parseList<
+    T extends keyof VerbsAndFieldsForList = keyof VerbsAndFieldsForList,
+  >(
+    value: any,
     verb: T,
     field: VerbsAndFieldsForList[T],
   ): any;
