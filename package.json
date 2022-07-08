@@ -1,6 +1,6 @@
 {
   "name": "@oai-pmh-js/oai-pmh",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,7 +25,8 @@
     "eslint-plugin-prettier": "^4.1.0",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "@types/node": "^18.0.3"
   },
   "files": [
     "dist"

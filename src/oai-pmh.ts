@@ -6,7 +6,7 @@ import {
   VerbsAndFieldsForList,
 } from './model/general';
 import { OaiPmhParserInterface } from './model/oai-pmh-parser.interface';
-import { default as fetch, AbortError } from 'node-fetch';
+import { default as fetch, Response } from 'node-fetch';
 import { OaiPmhError } from './oai-pmh-error.js';
 
 export class OaiPmh {
@@ -33,6 +33,11 @@ export class OaiPmh {
     return options;
   }
 
+  private static getTextFromResponse(response: Response) {
+    if (response.ok) return response.text();
+    throw new OaiPmhError(response);
+  }
+
   private async request(
     searchParams?: URLSearchParams,
     options?: RequestOptions,
@@ -50,14 +55,14 @@ export class OaiPmh {
       ? setTimeout(() => abortController.abort(), timeout)
       : undefined;
     try {
-      return (await promise).text();
+      const response = await promise;
+      return OaiPmh.getTextFromResponse(response);
     } catch (e: any) {
-      if (e instanceof AbortError) throw e;
       if (options?.retry && options.retry > 0) {
         options.retry -= 1;
         return await this.request(searchParams, options);
       }
-      throw new OaiPmhError(e.message);
+      throw e;
     } finally {
       if (timer) clearTimeout(timer);
     }
