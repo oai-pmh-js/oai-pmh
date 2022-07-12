@@ -14,7 +14,7 @@ type ListOptions = {
 };
 
 type RequestOptions = {
-  timeout?: number;
+  timeout?: number | null;
   abortController?: AbortController;
   retry?: number;
 };

@@ -42,7 +42,7 @@ export class OaiPmh {
     searchParams?: URLSearchParams,
     options?: RequestOptions,
   ): Promise<string> {
-    const abortController = options?.abortController || new AbortController();
+    const abortController = options?.abortController ?? new AbortController();
     const searchURL = new URL(this.requestOptions.baseUrl);
     if (searchParams) searchURL.search = searchParams.toString();
     const promise = fetch(searchURL.toString(), {
@@ -51,9 +51,13 @@ export class OaiPmh {
       headers: this.requestOptions.userAgent,
     });
     const timeout = options?.timeout;
-    const timer = timeout
-      ? setTimeout(() => abortController.abort(), timeout)
-      : undefined;
+    const timer =
+      timeout === null
+        ? null
+        : setTimeout(
+            () => abortController.abort(),
+            timeout === undefined ? 10000 : timeout,
+          );
     try {
       const response = await promise;
       return OaiPmh.getTextFromResponse(response);
