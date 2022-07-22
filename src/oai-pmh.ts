@@ -42,7 +42,10 @@ export class OaiPmh {
     searchParams?: URLSearchParams,
     options?: RequestOptions,
   ): Promise<string> {
-    const abortController = options?.abortController ?? new AbortController();
+    const abortController = new AbortController();
+    options?.abortSignal?.addEventListener('abort', () =>
+      abortController.abort(),
+    );
     const searchURL = new URL(this.requestOptions.baseUrl);
     if (searchParams) searchURL.search = searchParams.toString();
     const promise = fetch(searchURL.toString(), {
