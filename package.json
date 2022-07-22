@@ -1,32 +1,33 @@
 {
   "name": "@oai-pmh-js/oai-pmh",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "rimraf dist && tsc -p tsconfig.json"
+    "prepublishOnly": "rimraf dist && tsc -p tsconfig.json",
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oai-pmh-js/oai-pmh.git"
   },
   "dependencies": {
-    "node-fetch": "^3.2.6"
+    "node-fetch": "^3.2.9"
   },
   "devDependencies": {
     "@oai-pmh-js/oai-xml-parser": "0.1.14",
-    "@typescript-eslint/eslint-plugin": "^5.30.0",
-    "@typescript-eslint/parser": "^5.30.0",
-    "eslint": "^8.18.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "^4.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.7.4",
-    "@types/node": "^18.0.3"
+    "@types/node": "^18.0.6"
   },
   "files": [
     "dist"
