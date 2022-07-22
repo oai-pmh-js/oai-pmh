@@ -43,14 +43,16 @@ export class OaiPmh {
     options?: RequestOptions,
   ): Promise<string> {
     const abortController = new AbortController();
-    options?.abortSignal?.addEventListener('abort', () =>
-      abortController.abort(),
-    );
+    if (options?.abortSignal)
+      (<any>options.abortSignal).addEventListener(
+        'abort',
+        abortController.abort,
+      );
     const searchURL = new URL(this.requestOptions.baseUrl);
     if (searchParams) searchURL.search = searchParams.toString();
     const promise = fetch(searchURL.toString(), {
       method: 'GET',
-      signal: abortController.signal,
+      signal: <any>abortController.signal,
       headers: this.requestOptions.userAgent,
     });
     const timeout = options?.timeout;
@@ -72,6 +74,11 @@ export class OaiPmh {
       throw e;
     } finally {
       if (timer) clearTimeout(timer);
+      if (options?.abortSignal)
+        (<any>options.abortSignal).removeEventListener(
+          'abort',
+          abortController.abort,
+        );
     }
   }
 

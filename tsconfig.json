@@ -1,12 +1,9 @@
 {
+  "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
     "module": "es2022",
-    "moduleResolution": "node",
-    "lib": ["es2021"],
     "declaration": true,
-    "strict": true,
     "newLine": "lf",
-    "target": "es2021",
     "outDir": "./dist",
   },
   "include": ["./src"]
