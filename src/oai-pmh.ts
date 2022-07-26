@@ -6,7 +6,7 @@ import {
   VerbsAndFieldsForList,
 } from './model/general';
 import { OaiPmhParserInterface } from './model/oai-pmh-parser.interface';
-import { default as fetch, Response } from 'node-fetch';
+import { default as fetch, Response, AbortError } from 'node-fetch';
 import { OaiPmhError } from './oai-pmh-error.js';
 
 export class OaiPmh {
@@ -42,43 +42,22 @@ export class OaiPmh {
     searchParams?: URLSearchParams,
     options?: RequestOptions,
   ): Promise<string> {
-    const abortController = new AbortController();
-    if (options?.abortSignal)
-      (<any>options.abortSignal).addEventListener(
-        'abort',
-        abortController.abort,
-      );
     const searchURL = new URL(this.requestOptions.baseUrl);
     if (searchParams) searchURL.search = searchParams.toString();
     const promise = fetch(searchURL.toString(), {
       method: 'GET',
-      signal: <any>abortController.signal,
+      signal: <any>options?.abortSignal,
       headers: this.requestOptions.userAgent,
     });
-    const timeout = options?.timeout;
-    const timer =
-      timeout === null
-        ? null
-        : setTimeout(
-            () => abortController.abort(),
-            timeout === undefined ? 10000 : timeout,
-          );
     try {
       const response = await promise;
       return OaiPmh.getTextFromResponse(response);
     } catch (e: any) {
-      if (options?.retry && options.retry > 0) {
+      if (!(e instanceof AbortError) && options?.retry && options.retry > 0) {
         options.retry -= 1;
         return await this.request(searchParams, options);
       }
       throw e;
-    } finally {
-      if (timer) clearTimeout(timer);
-      if (options?.abortSignal)
-        (<any>options.abortSignal).removeEventListener(
-          'abort',
-          abortController.abort,
-        );
     }
   }
 

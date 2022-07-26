@@ -14,7 +14,6 @@ type ListOptions = {
 };
 
 type RequestOptions = {
-  timeout?: number | null;
   abortSignal?: AbortSignal;
   retry?: number;
 };
